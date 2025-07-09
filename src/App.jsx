@@ -1,11 +1,14 @@
 import React from 'react';
 import { ThemeProvider } from './contexts/ThemeContext.jsx';
-import Layout from './components/layout/Layout.jsx';
+import Layout from './pages/layout/Layout.jsx';
+import AppRoutes from './routes/AppRoutes'; // adjust path as needed
 
 function App() {
   return (
       <ThemeProvider>
-        <Layout />
+        {/*<Layout />*/}
+          <AppRoutes />
+
       </ThemeProvider>
   );
 }
