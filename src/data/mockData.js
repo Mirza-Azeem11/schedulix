@@ -70,7 +70,7 @@ export const mockRoles = [
         id: '2',
         name: 'Doctor',
         description: 'Medical staff with patient management access',
-        permissions: ['read', 'write', 'manage_patients', 'view_medical_records'],
+        permissions: ['read', 'write', 'manage_patients'],
         userCount: 15,
         color: 'bg-blue-500'
     },
