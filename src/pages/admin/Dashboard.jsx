@@ -212,14 +212,14 @@ const Dashboard = () => {
             icon: CalendarDays,
             color: 'purple'
         },
-        {
-            title: 'Monthly Revenue',
-            value: `$${(dashboardData.overview.monthlyRevenue || 0).toLocaleString()}`,
-            change: calculateChange(dashboardData.overview.monthlyRevenue, dashboardData.overview.monthlyRevenue * 0.85),
-            trend: 'up',
-            icon: DollarSign,
-            color: 'orange'
-        },
+        // {
+        //     title: 'Monthly Revenue',
+        //     value: `$${(dashboardData.overview.monthlyRevenue || 0).toLocaleString()}`,
+        //     change: calculateChange(dashboardData.overview.monthlyRevenue, dashboardData.overview.monthlyRevenue * 0.85),
+        //     trend: 'up',
+        //     icon: DollarSign,
+        //     color: 'orange'
+        // },
         {
             title: 'Total Appointments',
             value: dashboardData.overview.totalAppointments || 0,
@@ -228,14 +228,14 @@ const Dashboard = () => {
             icon: Calendar,
             color: 'indigo'
         },
-        {
-            title: 'Pending Payments',
-            value: `$${(dashboardData.overview.pendingPayments || 0).toLocaleString()}`,
-            change: calculateChange(dashboardData.overview.pendingPayments, dashboardData.overview.pendingPayments * 1.1),
-            trend: 'down',
-            icon: CreditCard,
-            color: 'red'
-        }
+        // {
+        //     title: 'Pending Payments',
+        //     value: `$${(dashboardData.overview.pendingPayments || 0).toLocaleString()}`,
+        //     change: calculateChange(dashboardData.overview.pendingPayments, dashboardData.overview.pendingPayments * 1.1),
+        //     trend: 'down',
+        //     icon: CreditCard,
+        //     color: 'red'
+        // }
     ] : [];
 
     // Transform revenue data for charts
@@ -255,7 +255,8 @@ const Dashboard = () => {
         } : null,
         appointments: appointmentStats ? {
             labels: appointmentStats.trends?.map(trend => {
-                const date = new Date(trend.date);
+                //const date = new Date(trend.date);
+                const date = new Date("2025-08-01"); // Assuming period is in 'YYYY-MM' format
                 return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             }) || [],
             datasets: [{
@@ -331,15 +332,15 @@ const Dashboard = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-8">
                 {stats.map((stat, index) => (
                     <StatsCard key={index} stat={stat} />
                 ))}
             </div>
 
             {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Chart title="Revenue Trend" data={chartData.revenue} type="revenue" />
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+                {/*<Chart title="Revenue Trend" data={chartData.revenue} type="revenue" />*/}
                 <Chart title="Appointments Trend" data={chartData.appointments} type="appointments" />
             </div>
 
@@ -414,12 +415,12 @@ const Dashboard = () => {
                                     Healthy
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-600 dark:text-gray-400">Analytics</span>
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Active
-                                </span>
-                            </div>
+                            {/*<div className="flex items-center justify-between">*/}
+                            {/*    <span className="text-sm text-gray-600 dark:text-gray-400">Analytics</span>*/}
+                            {/*    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">*/}
+                            {/*        Active*/}
+                            {/*    </span>*/}
+                            {/*</div>*/}
                         </div>
                     </div>
                 </div>

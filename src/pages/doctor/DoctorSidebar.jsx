@@ -51,16 +51,16 @@ const DoctorSidebar = ({ activeTab, onTabChange }) => {
       label: 'Schedule Timings', 
       icon: Clock
     },
-    { 
-      id: 'payments', 
-      label: 'Payments', 
-      icon: CreditCard
-    },
-    { 
-      id: 'blog', 
-      label: 'Blog', 
-      icon: FileText
-    },
+    // {
+    //   id: 'payments',
+    //   label: 'Payments',
+    //   icon: CreditCard
+    // },
+    // {
+    //   id: 'blog',
+    //   label: 'Blog',
+    //   icon: FileText
+    // },
     { 
       id: 'settings', 
       label: 'Settings', 

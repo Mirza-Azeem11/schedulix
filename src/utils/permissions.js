@@ -6,8 +6,8 @@ export const usePermissions = () => {
   const user = useSelector((state) => state.auth.user);
   const roles = user?.roles || [];
 
-  // Both Admin and Super Admin have full access to the UI
-  const isAdmin = roles.includes('Admin') || roles.includes('Super Admin');
+  // Admin has full access to the UI
+  const isAdmin = roles.includes('Admin');
 
   return {
     user,
@@ -18,8 +18,8 @@ export const usePermissions = () => {
 
 // Check if user has specific permission
 export const hasPermission = (userRoles, permission) => {
-  // Admin and Super Admin have all permissions
-  if (userRoles.includes('Admin') || userRoles.includes('Super Admin')) {
+  // Admin has all permissions
+  if (userRoles.includes('Admin')) {
     return true;
   }
 

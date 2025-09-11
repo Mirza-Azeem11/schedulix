@@ -29,10 +29,10 @@ const DoctorLayout = () => {
         return <DoctorPatients />;
       case 'schedule':
         return <DoctorSchedule />;
-      case 'payments':
-        return <DoctorPayments />;
-      case 'blog':
-        return <DoctorBlog />;
+      // case 'payments':
+      //   return <DoctorPayments />;
+      // case 'blog':
+      //   return <DoctorBlog />;
       case 'settings':
         return <DoctorSettings />;
       default:

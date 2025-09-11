@@ -36,8 +36,8 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'appointments', label: 'Appointments', icon: Calendar },
     { id: 'users', label: 'Users', icon: Users, badge: '248' },
     { id: 'roles', label: 'Roles', icon: Shield },
-    { id: 'payments', label: 'Payments', icon: CreditCard, badge: '23' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    // { id: 'payments', label: 'Payments', icon: CreditCard, badge: '23' },
+    // { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   ];
 
   // Filter menu items based on user permissions

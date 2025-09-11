@@ -19,12 +19,13 @@ const DoctorSchedule = () => {
   }, [user]);
 
   const fetchTimeSlots = async () => {
-    if (!user?.doctor_id && !user?.id) return;
-
     setLoading(true);
     try {
-      const doctorId = user.doctor_id || user.id;
-      const response = await timeSlotsAPI.getByDoctor(doctorId);
+      console.log('fetchTimeSlots token', localStorage.getItem('token'));
+
+      // Don't pass doctor_id - let the backend determine it from the logged-in user
+      const response = await timeSlotsAPI.getAll();
+      console.log('fetchTimeSlots response', response.data);
 
       const slotsData = response.data?.data || [];
       setTimeSlots(slotsData);
@@ -38,13 +39,8 @@ const DoctorSchedule = () => {
 
   const handleAddTimeSlot = async (slotData) => {
     try {
-      const doctorId = user.doctor_id || user.id;
-      const timeSlotData = {
-        ...slotData,
-        doctor_id: doctorId
-      };
-
-      const response = await timeSlotsAPI.create(timeSlotData);
+      // Don't pass doctor_id - let the backend determine it from the logged-in user
+      const response = await timeSlotsAPI.create(slotData);
       if (response.data.success) {
         setTimeSlots(prev => [...prev, response.data.data]);
         setIsAddTimeSlotOpen(false);
@@ -57,13 +53,8 @@ const DoctorSchedule = () => {
 
   const handleEditTimeSlot = async (id, slotData) => {
     try {
-      const doctorId = user.doctor_id || user.id;
-      const timeSlotData = {
-        ...slotData,
-        doctor_id: doctorId
-      };
-
-      const response = await timeSlotsAPI.update(id, timeSlotData);
+      // Don't pass doctor_id - let the backend determine it from the logged-in user
+      const response = await timeSlotsAPI.update(id, slotData);
       if (response.data.success) {
         setTimeSlots(prev => prev.map(slot =>
           slot.id === id ? response.data.data : slot

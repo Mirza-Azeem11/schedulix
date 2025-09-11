@@ -78,13 +78,13 @@ const PatientDashboard = () => {
       color: 'blue',
       action: () => setShowBookingModal(true)
     },
-    {
-      title: 'View Bills',
-      description: 'Check your billing and payment history',
-      icon: CreditCard,
-      color: 'orange',
-      action: () => navigate('/patient/bills')
-    }
+    // {
+    //   title: 'View Bills',
+    //   description: 'Check your billing and payment history',
+    //   icon: CreditCard,
+    //   color: 'orange',
+    //   action: () => navigate('/patient/bills')
+    // }
   ];
 
   const healthStats = [
@@ -241,7 +241,7 @@ const PatientDashboard = () => {
         {/* Quick Actions */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4">
             {quickActions.map((action, index) => {
               const Icon = action.icon;
               return (
@@ -322,7 +322,7 @@ const PatientDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    Lab results available
+                    New Appointment Scheduled
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">2 hours ago</p>
                 </div>

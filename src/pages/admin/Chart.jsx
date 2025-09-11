@@ -1,13 +1,15 @@
 import React from 'react';
 
 const Chart = ({ title, data, type }) => {
-  // Return early if no data
+    const message = "No data available"
+
+    // Return early if no data
   if (!data) {
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">{title}</h3>
           <div className="flex items-center justify-center h-64">
-            <p className="text-gray-500 dark:text-gray-400">No data available</p>
+            <p className="text-gray-500 dark:text-gray-400">{message}</p>
           </div>
         </div>
     );
@@ -42,7 +44,7 @@ const Chart = ({ title, data, type }) => {
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">{title}</h3>
           <div className="flex items-center justify-center h-64">
-            <p className="text-gray-500 dark:text-gray-400">Invalid data format</p>
+            <p className="text-gray-500 dark:text-gray-400">{message}</p>
           </div>
         </div>
     );

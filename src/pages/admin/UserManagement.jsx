@@ -14,7 +14,7 @@ const UserManagement = () => {
     const userRoles = user?.roles || [];
 
     // Check permissions
-    const isAdmin = userRoles.includes('Admin') || userRoles.includes('Super Admin');
+    const isAdmin = userRoles.includes('Admin');
     const canCreateUsers = isAdmin || hasPermission(userRoles, 'users.create');
     const canEditUsers = isAdmin || hasPermission(userRoles, 'users.edit');
     const canDeleteUsers = isAdmin || hasPermission(userRoles, 'users.delete');

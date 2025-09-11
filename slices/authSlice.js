@@ -9,6 +9,7 @@ export const loginUser = createAsyncThunk(
       const response = await authAPI.login({ email, password });
       const { token, user } = response.data.data;
 
+      console.log("loginuser", response.data.data);
       // Store token in localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));

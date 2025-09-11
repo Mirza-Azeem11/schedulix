@@ -24,7 +24,7 @@ const PatientManagement = () => {
   const userRoles = user?.roles || [];
 
   // Check permissions
-  const isAdmin = userRoles.includes('Admin') || userRoles.includes('Super Admin');
+  const isAdmin = userRoles.includes('Admin');
   const canCreatePatients = isAdmin || hasPermission(userRoles, 'patients.create');
   const canEditPatients = isAdmin || hasPermission(userRoles, 'patients.edit');
   const canDeletePatients = isAdmin || hasPermission(userRoles, 'patients.delete');
