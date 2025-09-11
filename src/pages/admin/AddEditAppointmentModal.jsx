@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { appointmentsAPI, doctorsAPI, patientsAPI } from '../../services/api';
+import { appointmentsAPI, doctorsAPI, patientsAPI, authAPI } from '../../services/api';
 import {
   Calendar,
   Clock,
@@ -13,13 +13,15 @@ import {
   Bell,
   Search,
   MapPin,
-  Video
+  Video,
+  Building
 } from 'lucide-react';
 
 const AddEditAppointmentModal = ({ isOpen, onClose, appointment = null, onSuccess }) => {
   const isEdit = !!appointment;
 
   const [formData, setFormData] = useState({
+    organization_id: '',
     patient_id: '',
     patientName: '',
     doctor_id: '',
@@ -43,6 +45,7 @@ const AddEditAppointmentModal = ({ isOpen, onClose, appointment = null, onSucces
   const [submitting, setSubmitting] = useState(false);
   const [doctors, setDoctors] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [patientSearch, setPatientSearch] = useState('');
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
@@ -144,9 +147,10 @@ const AddEditAppointmentModal = ({ isOpen, onClose, appointment = null, onSucces
   const loadOptions = async () => {
     setLoadingOptions(true);
     try {
-      const [doctorsResponse, patientsResponse] = await Promise.all([
+      const [doctorsResponse, patientsResponse, organizationsResponse] = await Promise.all([
         doctorsAPI.getAll(),
-        patientsAPI.getAll()
+        patientsAPI.getAll(),
+        authAPI.getOrganizations() // Fetch organizations
       ]);
 
       const doctorList = Array.isArray(doctorsResponse.data?.data?.doctors)
@@ -157,8 +161,13 @@ const AddEditAppointmentModal = ({ isOpen, onClose, appointment = null, onSucces
         ? patientsResponse.data.data.patients
         : [];
 
+      const orgList = Array.isArray(organizationsResponse.data?.data?.organizations)
+        ? organizationsResponse.data.data.organizations
+        : [];
+
       setDoctors(doctorList);
       setPatients(patientList);
+      setOrganizations(orgList); // Set organizations
     } catch (error) {
       console.error('Error loading options:', error);
     } finally {
@@ -184,6 +193,15 @@ const AddEditAppointmentModal = ({ isOpen, onClose, appointment = null, onSucces
              patientCode.toLowerCase().includes(searchLower);
     }
   ) : [];
+
+  // Filter doctors based on selected organization
+  const filteredDoctors = Array.isArray(doctors) ? doctors.filter(doctor => {
+    // If no organization is selected, show all doctors
+    if (!formData.organization_id) return true;
+
+    // Filter doctors by their tenant_id matching the selected organization
+    return doctor.tenant_id?.toString() === formData.organization_id;
+  }) : [];
 
   const validateForm = () => {
     const newErrors = {};
@@ -342,6 +360,7 @@ const AddEditAppointmentModal = ({ isOpen, onClose, appointment = null, onSucces
 
   const resetForm = () => {
     setFormData({
+      organization_id: '',
       patient_id: '',
       patientName: '',
       doctor_id: '',
@@ -423,6 +442,39 @@ const AddEditAppointmentModal = ({ isOpen, onClose, appointment = null, onSucces
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Organization Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Healthcare Organization *
+                </label>
+                <div className="relative">
+                  <Building className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <select
+                    name="organization_id"
+                    value={formData.organization_id}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        organization_id: e.target.value,
+                        doctor_id: '' // Reset doctor selection when organization changes
+                      }));
+                    }}
+                    disabled={loadingOptions}
+                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                      errors.organization_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    <option value="">Select healthcare organization</option>
+                    {organizations.map((org) => (
+                      <option key={org.id} value={org.id}>
+                        {org.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.organization_id && <p className="text-red-500 text-sm mt-1">{errors.organization_id}</p>}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Select Patient *
@@ -505,7 +557,7 @@ const AddEditAppointmentModal = ({ isOpen, onClose, appointment = null, onSucces
                     }`}
                   >
                     <option value="">Select doctor</option>
-                    {doctors.map((doctor) => (
+                    {filteredDoctors.map((doctor) => (
                       <option key={doctor.id} value={doctor.id}>
                         Dr. {doctor.User?.first_name} {doctor.User?.last_name} - {doctor.specialization}
                       </option>

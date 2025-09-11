@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../hooks/useRedux';
 import { fetchDoctors, deleteDoctor } from '../../../slices/doctorSlice';
-import { doctorsAPI } from '../../services/api';
+import { doctorsAPI, usersAPI } from '../../services/api';
 import AddEditDoctorModal from './AddEditDoctorModal';
 import {
   Plus,
@@ -14,7 +14,9 @@ import {
   Award,
   AlertCircle,
   CheckCircle,
-  Stethoscope
+  Stethoscope,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 
 const DoctorManagement = () => {
@@ -62,8 +64,9 @@ const DoctorManagement = () => {
         doctor.specialization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         doctor.license_number?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus =
-        statusFilter === 'all' || doctor.status?.toLowerCase() === statusFilter;
+    const matchesStatus = statusFilter === 'all' ||
+        (statusFilter === 'active' && doctor.approval_status === 'Approved') ||
+        (statusFilter === 'inactive' && doctor.approval_status === 'Pending');
 
     const matchesSpecialization =
         specializationFilter === 'all' ||
@@ -74,8 +77,8 @@ const DoctorManagement = () => {
 
   const stats = {
     total: (doctors || []).length,
-    active: (doctors || []).filter((d) => d.status?.toLowerCase() === 'active').length,
-    inactive: (doctors || []).filter((d) => d.status?.toLowerCase() === 'inactive').length,
+    active: (doctors || []).filter((d) => d.approval_status === 'Approved').length,
+    inactive: (doctors || []).filter((d) => d.approval_status === 'Pending').length,
     specializations: [
       ...new Set((doctors || []).map((d) => d.specialization).filter(Boolean)),
     ].length,
@@ -103,6 +106,39 @@ const DoctorManagement = () => {
       } catch (error) {
         console.error('Error deleting doctor:', error);
         setError('Failed to delete doctor. Please try again.');
+      }
+    }
+  };
+
+  const handleToggleStatus = async (doctor) => {
+    const currentApprovalStatus = doctor.approval_status;
+    const newApprovalStatus = currentApprovalStatus === 'Approved' ? 'Pending' : 'Approved';
+    const action = currentApprovalStatus === 'Approved' ? 'reject' : 'approve';
+
+    if (window.confirm(`Are you sure you want to ${action} this doctor?`)) {
+      try {
+        setError(null);
+
+        // Use specific approve/reject endpoints instead of generic update
+        if (action === 'approve') {
+          await doctorsAPI.approve(doctor.id);
+        } else {
+          // For rejection, you could optionally prompt for a reason
+          await doctorsAPI.reject(doctor.id, 'Status changed by admin');
+        }
+
+        // Refresh the doctors list
+        await loadDoctors();
+
+        // Show success message briefly
+        const successMessage = `Doctor ${action}d successfully`;
+        setError(null);
+
+        console.log(successMessage);
+
+      } catch (error) {
+        console.error(`Error ${action}ing doctor:`, error);
+        setError(`Failed to ${action} doctor. Please try again.`);
       }
     }
   };
@@ -308,12 +344,12 @@ const DoctorManagement = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                     <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            doctor.status?.toLowerCase() === 'active'
+                            doctor.approval_status === 'Approved'
                                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                 : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                         }`}
                     >
-                      {doctor.status}
+                      {doctor.approval_status === 'Approved' ? 'Active' : 'Inactive'}
                     </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -348,6 +384,25 @@ const DoctorManagement = () => {
                             title="Delete Doctor"
                         >
                           <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => handleToggleStatus(doctor)}
+                            className={`${
+                                doctor.approval_status === 'Approved'
+                                    ? 'text-red-600 hover:text-red-900'
+                                    : 'text-green-600 hover:text-green-900'
+                            } dark:text-red-400 dark:hover:text-red-300`}
+                            title={
+                              doctor.approval_status === 'Approved'
+                                  ? 'Set to Pending'
+                                  : 'Approve Doctor'
+                            }
+                        >
+                          {doctor.approval_status === 'Approved' ? (
+                              <ToggleRight className="w-4 h-4" />
+                          ) : (
+                              <ToggleLeft className="w-4 h-4" />
+                          )}
                         </button>
                       </div>
                     </td>

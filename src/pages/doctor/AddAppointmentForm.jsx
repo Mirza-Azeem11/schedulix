@@ -1,12 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { X, Calendar, Clock, User, Bell, Search } from "lucide-react"
+import { useState, useEffect } from "react"
+import { X, Calendar, Clock, User, Bell, Search, Building } from "lucide-react"
+import { authAPI } from "../../services/api"
 
-const NewAppointment = ({ isOpen, onClose, onAddAppointment, patients = [] }) => {
+const NewAppointment = ({ isOpen, onClose, onAddAppointment, patients = [], doctors = [] }) => {
     const [formData, setFormData] = useState({
+        organizationId: "",
         patientId: "",
         patientName: "",
+        doctorId: "",
         appointmentDate: "",
         appointmentTime: "",
         duration: "30",
@@ -24,6 +27,8 @@ const NewAppointment = ({ isOpen, onClose, onAddAppointment, patients = [] }) =>
     const [errors, setErrors] = useState({})
     const [patientSearch, setPatientSearch] = useState("")
     const [showPatientDropdown, setShowPatientDropdown] = useState(false)
+    const [organizations, setOrganizations] = useState([])
+    const [loadingOrganizations, setLoadingOrganizations] = useState(false)
 
     const appointmentTypes = [
         "General Consultation",
@@ -151,8 +156,10 @@ const NewAppointment = ({ isOpen, onClose, onAddAppointment, patients = [] }) =>
 
     const resetForm = () => {
         setFormData({
+            organizationId: "",
             patientId: "",
             patientName: "",
+            doctorId: "",
             appointmentDate: "",
             appointmentTime: "",
             duration: "30",
@@ -169,6 +176,36 @@ const NewAppointment = ({ isOpen, onClose, onAddAppointment, patients = [] }) =>
         setErrors({})
         setPatientSearch("")
     }
+
+    useEffect(() => {
+        if (isOpen) {
+            loadOrganizations();
+        }
+    }, [isOpen])
+
+    const loadOrganizations = async () => {
+        setLoadingOrganizations(true);
+        try {
+            const response = await authAPI.getOrganizations();
+            const orgList = Array.isArray(response.data?.data?.organizations)
+                ? response.data.data.organizations
+                : [];
+            setOrganizations(orgList);
+        } catch (error) {
+            console.error('Error loading organizations:', error);
+        } finally {
+            setLoadingOrganizations(false);
+        }
+    };
+
+    // Filter doctors based on selected organization
+    const filteredDoctorsForOrg = Array.isArray(doctors) ? doctors.filter(doctor => {
+        // If no organization is selected, show all doctors
+        if (!formData.organizationId) return true;
+
+        // Filter doctors by their tenant_id matching the selected organization
+        return doctor.tenant_id?.toString() === formData.organizationId;
+    }) : [];
 
     if (!isOpen) return null
 
@@ -197,6 +234,68 @@ const NewAppointment = ({ isOpen, onClose, onAddAppointment, patients = [] }) =>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-8">
+                    {/* Organization Selection */}
+                    <div className="space-y-6">
+                        <div className="flex items-center space-x-2 mb-4">
+                            <Building className="w-5 h-5 text-purple-600" />
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Organization Selection</h3>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Healthcare Organization *
+                            </label>
+                            <div className="relative">
+                                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <select
+                                    name="organizationId"
+                                    value={formData.organizationId}
+                                    onChange={(e) => {
+                                        handleInputChange(e);
+                                        // Reset doctor selection when organization changes
+                                        setFormData(prev => ({ ...prev, doctorId: '' }));
+                                    }}
+                                    disabled={loadingOrganizations}
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                >
+                                    <option value="">Select healthcare organization</option>
+                                    {organizations.map((org) => (
+                                        <option key={org.id} value={org.id}>
+                                            {org.name}                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            {loadingOrganizations && (
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Loading organizations...</p>
+                            )}
+                        </div>
+
+                        {/* Doctor Selection */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Assigned Doctor
+                            </label>
+                            <select
+                                name="doctorId"
+                                value={formData.doctorId}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            >
+                                <option value="">Select doctor (optional)</option>
+                                {filteredDoctorsForOrg.map((doctor) => (
+                                    <option key={doctor.id} value={doctor.id}>
+                                        Dr. {doctor.User?.first_name} {doctor.User?.last_name} - {doctor.specialization}
+                                    </option>
+                                ))}
+                            </select>
+                            {formData.organizationId && filteredDoctorsForOrg.length === 0 && (
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    No doctors available for the selected organization
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Patient Selection */}
                     <div className="space-y-6">
                         <div className="flex items-center space-x-2 mb-4">

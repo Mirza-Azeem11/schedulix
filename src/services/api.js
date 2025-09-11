@@ -44,6 +44,8 @@ export const authAPI = {
   getMe: () => api.get('/auth/me'),
   updateProfile: (profileData) => api.put('/auth/profile', profileData),
   changePassword: (passwordData) => api.put('/auth/change-password', passwordData),
+  getOrganizations: () => api.get('/auth/organizations'),
+  registerDoctor: (doctorData) => api.post('/auth/register-doctor', doctorData),
 };
 
 // Users API calls
@@ -63,6 +65,8 @@ export const doctorsAPI = {
   create: (doctorData) => api.post('/doctors', doctorData),
   update: (id, doctorData) => api.put(`/doctors/${id}`, doctorData),
   delete: (id) => api.delete(`/doctors/${id}`),
+  approve: (id) => api.put(`/doctors/approve/${id}`),
+  reject: (id, reason) => api.put(`/doctors/reject/${id}`, { rejection_reason: reason }),
 };
 
 // Patients API calls
@@ -149,6 +153,13 @@ export const rolesAPI = {
   update: (id, roleData) => api.put(`/roles/${id}`, roleData),
   delete: (id) => api.delete(`/roles/${id}`),
   getPermissions: () => api.get('/roles/permissions'),
+};
+
+// Company API calls
+export const companyAPI = {
+  register: (companyData) => api.post('/company/register', companyData),
+  getBySlug: (slug) => api.get(`/company/${slug}`),
+  checkSlugAvailability: (slug) => api.get(`/company/check-slug/${slug}`),
 };
 
 export default api;

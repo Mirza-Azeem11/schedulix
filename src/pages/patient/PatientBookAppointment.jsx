@@ -3,6 +3,7 @@ import { useAppDispatch } from '../../hooks/useRedux';
 import { useDoctors } from '../../hooks/useRedux';
 import { fetchDoctors } from '../../../slices/doctorSlice';
 import { createAppointment } from '../../../slices/appointmentSlice';
+import { authAPI } from '../../services/api';
 import {
   Calendar,
   Clock,
@@ -13,7 +14,8 @@ import {
   Phone,
   AlertCircle,
   Check,
-  X
+  X,
+  Building
 } from 'lucide-react';
 
 const PatientBookAppointment = ({ isOpen, onClose, onSuccess }) => {
@@ -21,6 +23,7 @@ const PatientBookAppointment = ({ isOpen, onClose, onSuccess }) => {
   const { doctors, loading: doctorsLoading } = useDoctors();
 
   const [formData, setFormData] = useState({
+    organization_id: '',
     doctor_id: '',
     appointment_date: '',
     appointment_time: '',
@@ -36,12 +39,47 @@ const PatientBookAppointment = ({ isOpen, onClose, onSuccess }) => {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [organizations, setOrganizations] = useState([]);
+  const [loadingOrganizations, setLoadingOrganizations] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       dispatch(fetchDoctors());
+      loadOrganizations();
     }
   }, [isOpen, dispatch]);
+
+  const loadOrganizations = async () => {
+    setLoadingOrganizations(true);
+    try {
+      const response = await authAPI.getOrganizations();
+      console.log('Organizations response:', response); // Debug log
+
+      // Handle different possible response structures
+      let orgList = [];
+      if (response?.data?.data?.organizations && Array.isArray(response.data.data.organizations)) {
+        orgList = response.data.data.organizations;
+      } else if (response?.data?.organizations && Array.isArray(response.data.organizations)) {
+        orgList = response.data.organizations;
+      } else if (response?.data && Array.isArray(response.data)) {
+        orgList = response.data;
+      } else {
+        console.warn('Unexpected organizations response structure:', response);
+      }
+
+      console.log('Parsed organizations:', orgList); // Debug log
+      setOrganizations(orgList);
+
+      if (orgList.length === 0) {
+        setErrors(prev => ({ ...prev, organizations: 'No organizations available' }));
+      }
+    } catch (error) {
+      console.error('Error loading organizations:', error);
+      setErrors(prev => ({ ...prev, organizations: 'Failed to load organizations' }));
+    } finally {
+      setLoadingOrganizations(false);
+    }
+  };
 
   const appointmentTypes = [
     'General Consultation',
@@ -60,11 +98,18 @@ const PatientBookAppointment = ({ isOpen, onClose, onSuccess }) => {
     '17:00', '17:30'
   ];
 
-  const filteredDoctors = doctors?.filter(doctor =>
-    doctor.first_name?.toLowerCase().includes(doctorSearch.toLowerCase()) ||
-    doctor.last_name?.toLowerCase().includes(doctorSearch.toLowerCase()) ||
-    doctor.specialty?.toLowerCase().includes(doctorSearch.toLowerCase())
-  ) || [];
+  // Filter doctors based on selected organization
+  const filteredDoctors = doctors?.filter(doctor => {
+    // First filter by organization if selected
+    const orgMatch = !formData.organization_id || doctor.tenant_id?.toString() === formData.organization_id;
+
+    // Then filter by search term
+    const searchMatch = doctor.User?.first_name?.toLowerCase().includes(doctorSearch.toLowerCase()) ||
+      doctor.User?.last_name?.toLowerCase().includes(doctorSearch.toLowerCase()) ||
+      doctor.specialization?.toLowerCase().includes(doctorSearch.toLowerCase());
+
+    return orgMatch && searchMatch;
+  }) || [];
 
   const handleDoctorSelect = (doctor) => {
     setSelectedDoctor(doctor);
@@ -103,6 +148,7 @@ const PatientBookAppointment = ({ isOpen, onClose, onSuccess }) => {
       onClose();
       // Reset form
       setFormData({
+        organization_id: '',
         doctor_id: '',
         appointment_date: '',
         appointment_time: '',
@@ -144,6 +190,41 @@ const PatientBookAppointment = ({ isOpen, onClose, onSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Organization Selection */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Healthcare Organization *
+            </label>
+            <div className="relative">
+              <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <select
+                value={formData.organization_id}
+                onChange={(e) => {
+                  handleInputChange('organization_id', e.target.value);
+                  // Reset doctor selection when organization changes
+                  setFormData(prev => ({ ...prev, doctor_id: '' }));
+                  setSelectedDoctor(null);
+                  setDoctorSearch('');
+                }}
+                disabled={loadingOrganizations}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Select healthcare organization</option>
+                {organizations.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {loadingOrganizations && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Loading organizations...</p>
+            )}
+            {errors.organizations && (
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.organizations}</p>
+            )}
+          </div>
+
           {/* Doctor Selection */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">

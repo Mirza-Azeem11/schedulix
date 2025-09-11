@@ -175,6 +175,14 @@ const LoginForm = () => {
           >
             Register as Doctor
           </button>
+          <div className="border-t border-gray-200 w-full my-4"></div>
+          <button
+            type="button"
+            className="text-green-600 hover:underline font-semibold"
+            onClick={() => navigate('/register/company')}
+          >
+            🏥 Register Your Healthcare Organization
+          </button>
         </div>
       </div>
     </div>

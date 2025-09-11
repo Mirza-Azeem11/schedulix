@@ -10,9 +10,14 @@ export const loginUser = createAsyncThunk(
       const { token, user } = response.data.data;
 
       console.log("loginuser", response.data.data);
-      // Store token in localStorage
+      // Store token and tenant info in localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+
+      // Store tenant info separately for easy access
+      if (user.tenant) {
+        localStorage.setItem('tenant', JSON.stringify(user.tenant));
+      }
 
       return { token, user };
     } catch (error) {
@@ -30,9 +35,14 @@ export const registerUser = createAsyncThunk(
       const response = await authAPI.register(userData);
       const { token, user } = response.data.data;
 
-      // Store token in localStorage
+      // Store token and tenant info in localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+
+      // Store tenant info separately for easy access
+      if (user.tenant) {
+        localStorage.setItem('tenant', JSON.stringify(user.tenant));
+      }
 
       return { token, user };
     } catch (error) {
@@ -90,15 +100,17 @@ export const changePassword = createAsyncThunk(
   }
 );
 
-// Initial state with token from localStorage
+// Initial state with token and tenant from localStorage
 const getInitialState = () => {
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
+  const tenant = localStorage.getItem('tenant');
 
   return {
     isAuthenticated: !!token,
     token: token || null,
     user: user ? JSON.parse(user) : null,
+    tenant: tenant ? JSON.parse(tenant) : null,
     loading: false,
     error: null,
   };
@@ -114,11 +126,13 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.token = null;
       state.user = null;
+      state.tenant = null;
       state.error = null;
 
       // Clear localStorage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('tenant');
     },
     clearError(state) {
       state.error = null;
@@ -128,6 +142,7 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.token = token;
       state.user = user;
+      state.tenant = user.tenant || null;
     },
   },
   extraReducers: (builder) => {
@@ -142,6 +157,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.token = action.payload.token;
         state.user = action.payload.user;
+        state.tenant = action.payload.user.tenant || null;
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -159,6 +175,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.token = action.payload.token;
         state.user = action.payload.user;
+        state.tenant = action.payload.user.tenant || null;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {

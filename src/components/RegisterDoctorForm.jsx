@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 
@@ -12,6 +12,8 @@ const RegisterDoctorForm = () => {
     phone: '',
     date_of_birth: '',
     gender: '',
+    // Organization selection
+    tenant_id: '',
     // Doctor-specific fields (matching Doctor model)
     license_number: '',
     specialization: '',
@@ -23,10 +25,31 @@ const RegisterDoctorForm = () => {
     consultation_hours: '',
     languages_spoken: ''
   });
+
+  const [organizations, setOrganizations] = useState([]);
+  const [organizationsLoading, setOrganizationsLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Fetch organizations on component mount
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        setOrganizationsLoading(true);
+        const response = await authAPI.getOrganizations();
+        setOrganizations(response.data.data.organizations || []);
+      } catch (err) {
+        console.error('Error fetching organizations:', err);
+        setError('Failed to load healthcare organizations. Please refresh the page.');
+      } finally {
+        setOrganizationsLoading(false);
+      }
+    };
+
+    fetchOrganizations();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,7 +63,14 @@ const RegisterDoctorForm = () => {
     setLoading(true);
 
     try {
-      // Prepare payload exactly as backend expects
+      // Validate required fields
+      if (!formData.tenant_id) {
+        setError('Please select a healthcare organization');
+        setLoading(false);
+        return;
+      }
+
+      // Prepare payload for the new doctor registration API
       const payload = {
         // User fields
         email: formData.email,
@@ -50,7 +80,10 @@ const RegisterDoctorForm = () => {
         phone: formData.phone || null,
         date_of_birth: formData.date_of_birth || null,
         gender: formData.gender || null,
-        role: 'Doctor',
+
+        // Organization selection
+        tenant_id: parseInt(formData.tenant_id),
+
         // Doctor-specific fields
         license_number: formData.license_number,
         specialization: formData.specialization,
@@ -65,11 +98,12 @@ const RegisterDoctorForm = () => {
 
       console.log('Sending doctor registration payload:', payload);
 
-      const response = await authAPI.register(payload);
+      // Use the new doctor registration endpoint
+      const response = await authAPI.registerDoctor(payload);
       console.log('Registration response:', response.data);
 
-      setSuccess('Registration successful! Redirecting to login...');
-      setTimeout(() => navigate('/login'), 2000);
+      setSuccess('Doctor registration submitted successfully! Your application is pending approval from the healthcare organization admin.');
+      setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
       console.error('Registration error:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Registration failed';
@@ -108,6 +142,35 @@ const RegisterDoctorForm = () => {
         )}
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+          {/* Healthcare Organization Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Choose Healthcare Organization *
+            </label>
+            <select
+              name="tenant_id"
+              value={formData.tenant_id}
+              onChange={handleChange}
+              required
+              disabled={organizationsLoading}
+              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              <option value="">
+                {organizationsLoading ? 'Loading organizations...' : 'Select Healthcare Organization'}
+              </option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+            {organizations.length === 0 && !organizationsLoading && (
+              <p className="mt-1 text-sm text-gray-500">
+                No healthcare organizations available
+              </p>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <input
               name="first_name"
