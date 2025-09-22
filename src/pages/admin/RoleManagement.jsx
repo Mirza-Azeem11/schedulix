@@ -111,20 +111,22 @@ const RoleManagement = () => {
                                 Permissions
                             </p>
                             <div className="flex flex-wrap gap-1">
-                                {role.permissions?.slice(0, 3).map((permission, index) => (
-                                    <span
-                                        key={index}
-                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-                                    >
-                                        {permission.replace('_', ' ').replace('.', ' ')}
-                                    </span>
-                                ))}
-                                {role.permissions && role.permissions.length > 3 && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                                        +{role.permissions.length - 3} more
-                                    </span>
-                                )}
-                            </div>
+  {Array.isArray(role.permissions) &&
+    role.permissions.slice(0, 3).map((permission, index) => (
+      <span
+        key={index}
+        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+      >
+        {String(permission).replace(/[_\.]/g, ' ')}
+      </span>
+    ))}
+
+  {Array.isArray(role.permissions) && role.permissions.length > 3 && (
+    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+      +{role.permissions.length - 3} more
+    </span>
+  )}
+</div>
                         </div>
                     </div>
                 ))}
